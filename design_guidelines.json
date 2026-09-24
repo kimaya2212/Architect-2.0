@@ -1,0 +1,166 @@
+{
+  "project_name": "Architect 2.0",
+  "app_type": "hybrid_fullstack",
+  "archetype": "LINEAR_MEETS_NOTION",
+  "theme_strategy": {
+    "default_mode": "dark",
+    "workspace_default": "dark",
+    "system_aware": true,
+    "forbidden_styles": [
+      "purple-to-pink gradients",
+      "glassmorphism overload",
+      "emoji characters as icons",
+      "heavy glowing drop-shadows",
+      "rounded-full oversized pills for primary structure"
+    ]
+  },
+  "color_palette": {
+    "dark": {
+      "bg_base": "#0B0C0E",
+      "bg_surface": "#111316",
+      "bg_elevated": "#171A1E",
+      "border": "#23272D",
+      "border_strong": "#2F343B",
+      "text_primary": "#ECEEF1",
+      "text_secondary": "#9AA1AB",
+      "text_muted": "#6B727C",
+      "accent": "#6EE7B7",
+      "accent_text": "#0B0C0E",
+      "accent_hover": "#86EFC5",
+      "info": "#60A5FA",
+      "warning": "#FBBF24",
+      "danger": "#F87171",
+      "success": "#34D399"
+    },
+    "light": {
+      "bg_base": "#FAFAF9",
+      "bg_surface": "#FFFFFF",
+      "bg_elevated": "#F4F4F5",
+      "border": "#E7E5E4",
+      "border_strong": "#D6D3D1",
+      "text_primary": "#18181B",
+      "text_secondary": "#52525B",
+      "text_muted": "#71717A",
+      "accent": "#059669",
+      "accent_text": "#FFFFFF",
+      "accent_hover": "#047857",
+      "info": "#2563EB",
+      "warning": "#D97706",
+      "danger": "#DC2626",
+      "success": "#16A34A"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "ui": "Inter, sans-serif",
+      "code": "JetBrains Mono, monospace"
+    },
+    "weights": [400, 500, 600],
+    "scale_px": [12, 13, 14, 16, 20, 28, 44],
+    "heading_tracking": "-0.02em",
+    "rules": {
+      "hero_headline": "text-4xl lg:text-[44px] tracking-[-0.02em] font-semibold text-primary leading-tight",
+      "section_headline": "text-2xl lg:text-[28px] tracking-[-0.02em] font-semibold text-primary",
+      "subsection_headline": "text-lg lg:text-[20px] tracking-[-0.01em] font-medium text-primary",
+      "body": "text-[14px] leading-relaxed font-normal text-secondary",
+      "small_code": "font-mono text-[12px] leading-normal text-muted",
+      "kbd_text": "font-mono text-[11px] uppercase tracking-wider text-secondary"
+    }
+  },
+  "shape_and_space": {
+    "grid_base_px": 8,
+    "border_width": "1px",
+    "radii": {
+      "inputs_chips": "6px",
+      "cards": "10px",
+      "modals_promptbox": "14px"
+    },
+    "shadows": {
+      "flat_surfaces": "none",
+      "floating_layers": "0 10px 30px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)"
+    }
+  },
+  "iconography": {
+    "library": "lucide-react",
+    "default_size": 16,
+    "stroke_width": 1.5,
+    "rule": "Never use emoji characters for functional or status icons. Always use Lucide icons."
+  },
+  "motion": {
+    "hover_duration": "150ms ease-out",
+    "panel_transition": "250ms cubic-bezier(0.16, 1, 0.3, 1)",
+    "entrance_animation": "400ms cubic-bezier(0.16, 1, 0.3, 1)",
+    "streaming_caret": "animate-pulse border-r-2 border-emerald-400 inline-block h-[1.2em] align-middle ml-0.5",
+    "reduced_motion": "respect prefers-reduced-motion media query"
+  },
+  "component_specs": {
+    "Button": {
+      "variants": ["primary", "secondary", "ghost", "danger"],
+      "sizes": ["sm", "md", "lg"],
+      "loading_state": "Lucide Loader2 spinning icon + disabled state",
+      "test_id": "data-testid=\"button-[name]\""
+    },
+    "SegmentedControl": {
+      "usage": "Switching Simple Mode vs Pro Mode seamlessly in app workspace",
+      "animation": "Framer motion background slide indicator, 250ms duration",
+      "test_id": "data-testid=\"mode-segmented-toggle\""
+    },
+    "PromptBox": {
+      "radius": "14px",
+      "border": "1px solid border_strong",
+      "selectors": ["attach file button", "framework selector", "model dropdown", "plan-first toggle"],
+      "test_id": "data-testid=\"hero-prompt-box\""
+    },
+    "CommandPalette": {
+      "shortcut": "Cmd+K / Ctrl+K",
+      "radius": "14px",
+      "features": ["Quick navigate", "Create project", "Switch mode", "Run command"],
+      "test_id": "data-testid=\"command-palette\""
+    }
+  },
+  "page_scopes": {
+    "landing": {
+      "sections": [
+        "Sticky minimal nav with brand logo, product links, and 'Launch Workspace' CTA",
+        "Hero section: headline 'Describe it. Ship it. Own the code.', subtext, prompt input box, looped mock build demo",
+        "How it works: 3-step timeline (Describe -> Architect -> Deploy)",
+        "For everyone / For developers: 2-column comparison with interactive mini Simple vs Pro toggle preview",
+        "Agent frameworks logo row: LangChain, LlamaIndex, AutoGen, CrewAI, Vercel AI SDK",
+        "Templates grid: 6 pre-built app templates with tag chips & deploy action",
+        "Pricing section: Free / Pro / Team tiers with feature comparison list",
+        "FAQ section: Accordion with clear answers on code ownership, self-hosting, and API keys",
+        "Minimal tech footer with status badge, docs links, system mode toggle"
+      ]
+    },
+    "auth": {
+      "layout": "Split view layout (left form pane, right feature showcase pane)",
+      "left_form": "Google / GitHub social login buttons, email + password form, password strength meter, show/hide toggle, forgot password link",
+      "right_pane": "Rotating interactive preview of Architect 2.0 workspace with customer quote card"
+    },
+    "onboarding": {
+      "steps": 3,
+      "flow": ["Step 1: Primary Role & Stack Preference", "Step 2: AI Model & Key Configuration", "Step 3: First Project Setup"],
+      "controls": "Progress dots, back/continue buttons, skip option"
+    },
+    "workspace_shell": {
+      "sidebar": "240px left sidebar collapsible to 64px icon rail",
+      "header": "Breadcrumbs, active project status, Simple / Pro segmented toggle, Deploy button, user menu",
+      "simple_mode": "Clean single/dual panel view: plain-language chat assistant + real-time dynamic web app live preview pane",
+      "pro_mode": "Multi-pane IDE layout: collapsible file tree, syntax-highlighted code editor, terminal console, execution diffs, git branches, trace logs, env variables editor",
+      "responsive": "Under 1024px collapses to tabbed single pane view with bottom navigation rail"
+    }
+  },
+  "image_urls": {
+    "developer_coding_workspace": "https://images.unsplash.com/photo-1549692520-acc6669e2f0c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzV8MHwxfHNlYXJjaHwxfHxtaW5pbWFsJTIwbW9kZXJuJTIwdGVjaCUyMGRldmVsb3BlciUyMHNvZnR3YXJlJTIwaW50ZXJmYWNlJTIwd29ya2Zsb3d8ZW58MHx8fHwxNzkwMjYzODQxfDA&ixlib=rb-4.1.0&q=85",
+    "dark_laptop_code_display": "https://images.unsplash.com/photo-1608306448197-e83633f1261c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzV8MHwxfHNlYXJjaHw0fHxtaW5pbWFsJTIwbW9kZXJuJTIwdGVjaCUyMGRldmVsb3BlciUyMHNvZnR3YXJlJTIwaW50ZXJmYWNlJTIwd29ya2Zsb3d8ZW58MHx8fHwxNzkwMjYzODQxfDA&ixlib=rb-4.1.0&q=85",
+    "timeline_editing_interface": "https://images.pexels.com/photos/6253568/pexels-photo-6253568.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "instructions_to_main_agent": [
+    "Use JavaScript (.js) files as required by the codebase setup.",
+    "Implement light and dark mode support using CSS variables or Tailwind dark: utility classes with #0B0C0E as default dark canvas background.",
+    "Ensure all interactive elements have data-testid attributes (e.g., data-testid='deploy-button', data-testid='mode-segmented-toggle').",
+    "Strictly adhere to the accent color #6EE7B7 (dark) and #059669 (light). Avoid pink/purple gradients.",
+    "Use Lucide React icons for all UI iconography with 16px size and 1.5 stroke width.",
+    "Include Sonner toast notifications for actions like copying code, saving env vars, deploying, and changing settings."
+  ]
+}
