@@ -350,6 +350,127 @@ async def load_sample(user: User = Depends(get_current_user)):
     return created
 
 
+class Message(BaseModel):
+    id: str
+    project_id: str
+    user_id: str
+    role: str                      # user | assistant | system
+    content: str = ""
+    kind: str = "text"            # text | plan | build | error
+    meta: Dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class MessageCreate(BaseModel):
+    role: str
+    content: str = ""
+    kind: str = "text"
+    meta: Dict[str, Any] = Field(default_factory=dict)
+
+
+@api_router.get("/projects/{project_id}/messages", response_model=List[Message])
+async def list_messages(project_id: str, user: User = Depends(get_current_user)):
+    proj = await db.projects.find_one({"id": project_id, "user_id": user.user_id}, {"_id": 0})
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    docs = await db.messages.find({"project_id": project_id, "user_id": user.user_id}, {"_id": 0}).sort("created_at", 1).to_list(1000)
+    return [Message(**d) for d in docs]
+
+
+@api_router.post("/projects/{project_id}/messages", response_model=Message)
+async def create_message(project_id: str, payload: MessageCreate, user: User = Depends(get_current_user)):
+    proj = await db.projects.find_one({"id": project_id, "user_id": user.user_id}, {"_id": 0})
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    msg = Message(
+        id=new_id("msg_"),
+        project_id=project_id,
+        user_id=user.user_id,
+        role=payload.role,
+        content=payload.content,
+        kind=payload.kind,
+        meta=payload.meta,
+        created_at=now_iso(),
+    )
+    await db.messages.insert_one(msg.model_dump())
+    await db.projects.update_one({"id": project_id}, {"$set": {"last_edited": now_iso(), "updated_at": now_iso()}})
+    return msg
+
+
+# ----------------------------- Agents -----------------------------
+class Agent(BaseModel):
+    id: str
+    user_id: str
+    name: str
+    goal: str = ""
+    framework: str = "LangGraph"
+    model: str = "Claude Sonnet 4.6"
+    status: str = "active"         # active | draft
+    success_rate: int = 95
+    runs: int = 0
+    tools: List[str] = Field(default_factory=list)
+    system_prompt: str = ""
+    is_sample: bool = False
+    created_at: str
+
+
+class AgentCreate(BaseModel):
+    name: str
+    goal: str = ""
+    framework: str = "LangGraph"
+    model: str = "Claude Sonnet 4.6"
+    tools: List[str] = Field(default_factory=list)
+    system_prompt: str = ""
+
+
+SAMPLE_AGENTS = [
+    {"name": "Helpdesk Copilot", "goal": "Answer customer questions from our help center and draft replies.", "framework": "LangGraph", "model": "Claude Sonnet 4.6", "success_rate": 96, "runs": 1284, "tools": ["Web search", "Database", "Email"], "system_prompt": "You are a friendly support agent. Use the knowledge base before answering. Never invent policy."},
+    {"name": "Research Scout", "goal": "Run multi-step web research and return a cited summary.", "framework": "CrewAI", "model": "GPT-5.4", "success_rate": 91, "runs": 512, "tools": ["Web search", "Custom API"], "system_prompt": "You research topics thoroughly and always cite sources."},
+]
+
+
+async def _seed_agents(user_id: str):
+    created = []
+    base = datetime.now(timezone.utc)
+    for i, a in enumerate(SAMPLE_AGENTS):
+        ag = Agent(id=new_id("agent_"), user_id=user_id, is_sample=True, created_at=(base - timedelta(days=i)).isoformat(), **a)
+        await db.agents.insert_one(ag.model_dump())
+        created.append(ag)
+    return created
+
+
+@api_router.get("/agents", response_model=List[Agent])
+async def list_agents(user: User = Depends(get_current_user)):
+    docs = await db.agents.find({"user_id": user.user_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    if not docs:
+        created = await _seed_agents(user.user_id)
+        return created
+    return [Agent(**d) for d in docs]
+
+
+@api_router.post("/agents", response_model=Agent)
+async def create_agent(payload: AgentCreate, user: User = Depends(get_current_user)):
+    ag = Agent(
+        id=new_id("agent_"),
+        user_id=user.user_id,
+        status="draft",
+        success_rate=0,
+        runs=0,
+        created_at=now_iso(),
+        **payload.model_dump(),
+    )
+    await db.agents.insert_one(ag.model_dump())
+    return ag
+
+
+@api_router.get("/agents/{agent_id}", response_model=Agent)
+async def get_agent(agent_id: str, user: User = Depends(get_current_user)):
+    doc = await db.agents.find_one({"id": agent_id, "user_id": user.user_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    return Agent(**doc)
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Architect 2.0 API"}

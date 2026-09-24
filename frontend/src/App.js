@@ -15,6 +15,9 @@ import Onboarding from "@/pages/Onboarding";
 import Home from "@/pages/Home";
 import Projects from "@/pages/Projects";
 import Templates from "@/pages/Templates";
+import Agents from "@/pages/Agents";
+import AgentDetail from "@/pages/AgentDetail";
+import ProjectWorkspace from "@/pages/ProjectWorkspace";
 import ComingSoon from "@/pages/ComingSoon";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
@@ -52,12 +55,14 @@ function AppRouter() {
       <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+      <Route path="/project/:id" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
 
       <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
         <Route path="/home" element={<Home />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/templates" element={<Templates />} />
-        <Route path="/agents" element={<ComingSoon page="Agents" />} />
+        <Route path="/agents" element={<Agents />} />
+        <Route path="/agents/:id" element={<AgentDetail />} />
         <Route path="/integrations" element={<ComingSoon page="Integrations" />} />
         <Route path="/usage" element={<ComingSoon page="Usage & Billing" />} />
         <Route path="/settings" element={<Settings />} />

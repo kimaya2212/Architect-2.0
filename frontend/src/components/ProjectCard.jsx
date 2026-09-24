@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { MoreHorizontal, Pencil, Copy, Archive, Trash2, Clock } from "lucide-react";
 import { ProjectThumb } from "@/components/ProjectThumb";
 import { StatusChip } from "@/components/ds/StatusChip";
@@ -23,12 +24,13 @@ function timeAgo(iso) {
 }
 
 export function ProjectCard({ project, onChanged, view = "grid" }) {
+  const navigate = useNavigate();
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [name, setName] = useState(project.name);
   const [busy, setBusy] = useState(false);
 
-  const open = () => toast(project.name, { description: "Opening the workspace lands in the next phase — chat, preview and deploy." });
+  const open = () => navigate(`/project/${project.id}`);
 
   const doRename = async () => {
     setBusy(true);

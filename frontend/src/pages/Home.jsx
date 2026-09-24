@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Paperclip, ChevronDown, ArrowUp, Sparkles, GitBranch, LayoutTemplate, Bot,
@@ -41,6 +42,7 @@ function Pill({ label, value, options, onChange, testId }) {
 
 export default function Home() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [type, setType] = useState("web");
   const [framework, setFramework] = useState("Auto");
@@ -73,10 +75,7 @@ export default function Home() {
     try {
       const res = await api.post("/projects", { prompt: prompt.trim(), type, framework, mode: user?.mode || "simple" });
       setPrompt("");
-      await load();
-      toast(planFirst ? "Plan drafted" : "Project created", {
-        description: planFirst ? `Review the plan for "${res.data.name}" in the workspace (opens next phase).` : `"${res.data.name}" is ready to build.`,
-      });
+      navigate(`/project/${res.data.id}`);
     } catch (e) {
       toast("Couldn't create project", { description: "Please try again." });
     } finally { setCreating(false); }
@@ -91,7 +90,8 @@ export default function Home() {
   };
 
   const entryAction = (key) => {
-    if (key === "template") { window.location.href = "/templates"; return; }
+    if (key === "template") { navigate("/templates"); return; }
+    if (key === "agent") { navigate("/agents"); return; }
     const map = {
       import: { t: "Import a project", d: "The 3-step import flow (GitHub, .zip, URL) opens in the next phase." },
       agent: { t: "Build an agent", d: "The agent wizard (LangGraph, CrewAI and more) opens in the next phase." },
