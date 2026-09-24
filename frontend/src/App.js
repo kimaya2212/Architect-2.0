@@ -17,6 +17,9 @@ import Projects from "@/pages/Projects";
 import Templates from "@/pages/Templates";
 import Agents from "@/pages/Agents";
 import AgentDetail from "@/pages/AgentDetail";
+import Integrations from "@/pages/Integrations";
+import Usage from "@/pages/Usage";
+import ImportFlow from "@/pages/ImportFlow";
 import ProjectWorkspace from "@/pages/ProjectWorkspace";
 import ComingSoon from "@/pages/ComingSoon";
 import Settings from "@/pages/Settings";
@@ -63,8 +66,9 @@ function AppRouter() {
         <Route path="/templates" element={<Templates />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/agents/:id" element={<AgentDetail />} />
-        <Route path="/integrations" element={<ComingSoon page="Integrations" />} />
-        <Route path="/usage" element={<ComingSoon page="Usage & Billing" />} />
+        <Route path="/import" element={<ImportFlow />} />
+        <Route path="/integrations" element={<Integrations />} />
+        <Route path="/usage" element={<Usage />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
 

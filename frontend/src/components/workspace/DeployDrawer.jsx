@@ -6,6 +6,7 @@ import {
   Globe, ArrowRight, ShieldCheck, Database, Server, GitCommitHorizontal, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ds/Button";
+import { Badge } from "@/components/ds/Badge";
 import { cn } from "@/lib/utils";
 
 // Believable QR-style SVG (decorative, deterministic from the URL)
@@ -52,6 +53,38 @@ const CHECKS = [
 ];
 
 const DEPLOY_STEPS = ["Queued", "Building", "Optimizing", "Live"];
+
+const DEPLOYMENTS = [
+  { id: "dpl_1", env: "Production", status: "Live", commit: "a1b2c3d", msg: "Add revenue chart", time: "2m ago", by: "Ada" },
+  { id: "dpl_2", env: "Production", status: "Superseded", commit: "e4f5g6h", msg: "Wire authentication", time: "1h ago", by: "Ada" },
+  { id: "dpl_3", env: "Preview", status: "Ready", commit: "i7j8k9l", msg: "Scaffold project", time: "3h ago", by: "Architect" },
+];
+
+function DeploymentsList() {
+  return (
+    <div className="mt-6" data-testid="deployments-list">
+      <div className="mb-2 text-[12px] font-medium uppercase tracking-wider text-ac-text-muted">Recent deployments</div>
+      <div className="space-y-1.5">
+        {DEPLOYMENTS.map((d) => (
+          <div key={d.id} className="rounded-[8px] border border-ac-line bg-ac-base p-3" data-testid={`deployment-${d.id}`}>
+            <div className="flex items-center gap-2">
+              <Badge tone={d.status === "Live" ? "success" : d.status === "Ready" ? "info" : "outline"}>{d.status}</Badge>
+              <span className="text-[12px] text-ac-text-muted">{d.env}</span>
+              <span className="ml-auto font-mono text-[11px] text-ac-text-muted">{d.commit}</span>
+            </div>
+            <div className="mt-1.5 text-[13px] text-ac-text">{d.msg}</div>
+            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-ac-text-muted">
+              {d.by} · {d.time}
+              <button onClick={() => toast("Deployment logs", { description: `${d.commit} · build succeeded in 42s` })} className="ml-auto hover:text-ac-text" data-testid={`logs-${d.id}`}>Logs</button>
+              {d.status === "Superseded" && <button onClick={() => toast("Rolled back", { description: `Production now serving ${d.commit}`, action: { label: "Undo", onClick: () => toast("Rollback undone") } })} className="text-ac-accent hover:underline" data-testid={`rollback-${d.id}`}>Rollback</button>}
+              {d.status === "Ready" && d.env === "Preview" && <button onClick={() => toast("Promoted to production", { description: d.commit })} className="text-ac-accent hover:underline" data-testid={`promote-${d.id}`}>Promote</button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function DeployDrawer({ open, onClose, project, pro, onDeployed }) {
   const [phase, setPhase] = useState("preflight"); // preflight | deploying | done
@@ -188,6 +221,8 @@ export function DeployDrawer({ open, onClose, project, pro, onDeployed }) {
                       <button key={e} onClick={() => setEnv(e)} className={cn("rounded-[6px] px-3 py-1.5 text-[13px] font-medium capitalize", env === e ? "bg-ac-surface text-ac-text border border-ac-line-strong" : "text-ac-text-muted")} data-testid={`env-${e}`}>{e}</button>
                     ))}
                   </div>
+
+                  <DeploymentsList />
                 </>
               )}
             </div>

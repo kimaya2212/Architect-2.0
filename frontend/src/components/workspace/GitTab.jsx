@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { GitBranch, GitCommit, GitPullRequest, Github, Check } from "lucide-react";
 import { Button } from "@/components/ds/Button";
 import { Badge } from "@/components/ds/Badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 
 const COMMITS = [
   { msg: "Add revenue chart and KPI cards", author: "Architect", time: "2m", hash: "a1b2c3d" },
@@ -21,6 +24,8 @@ const DIFF = [
 ];
 
 export function GitTab({ pro }) {
+  const [prOpen, setPrOpen] = useState(false);
+  const [prTitle, setPrTitle] = useState("Add revenue chart and authentication");
   if (!pro) {
     return (
       <div className="flex h-full items-center justify-center bg-ac-base p-8">
@@ -42,7 +47,7 @@ export function GitTab({ pro }) {
         <Badge tone="success" className="ml-1">Synced · 2m ago</Badge>
         <div className="ml-auto flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => toast("Pull from upstream", { description: "No conflicts — you're up to date." })}>Pull</Button>
-          <Button variant="primary" size="sm" onClick={() => toast("Draft pull request", { description: "AI-written title and description are ready to review." })}><GitPullRequest className="h-4 w-4" strokeWidth={1.5} /> Open PR</Button>
+          <Button variant="primary" size="sm" onClick={() => setPrOpen(true)} data-testid="git-open-pr"><GitPullRequest className="h-4 w-4" strokeWidth={1.5} /> Open PR</Button>
         </div>
       </div>
       <div className="grid flex-1 grid-cols-2 overflow-hidden">
@@ -67,6 +72,21 @@ export function GitTab({ pro }) {
           ))}
         </div>
       </div>
+
+      <Dialog open={prOpen} onOpenChange={setPrOpen}>
+        <DialogContent className="border-ac-line bg-ac-elevated" data-testid="pr-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-ac-text">Open a pull request</DialogTitle>
+            <DialogDescription className="text-ac-text-muted">chat/session-1 → main · 4 commits · 14 files</DialogDescription>
+          </DialogHeader>
+          <label className="text-[13px] font-medium text-ac-text-secondary">Title</label>
+          <input value={prTitle} onChange={(e) => setPrTitle(e.target.value)} className="focus-ring mt-1 h-10 w-full rounded-md border border-ac-line bg-ac-surface px-3 text-[14px] text-ac-text" data-testid="pr-title" />
+          <label className="mt-2 text-[13px] font-medium text-ac-text-secondary">Description <span className="text-ac-text-muted">· AI-generated</span></label>
+          <textarea defaultValue={"Adds a live revenue chart and KPI cards to the dashboard, wires email + Google authentication with protected routes, and creates the customers and invoices tables.\n\n- New RevenueChart component\n- Auth middleware + sign-in page\n- DB migrations"} rows={5} className="focus-ring mt-1 w-full resize-none rounded-md border border-ac-line bg-ac-surface p-3 text-[13px] text-ac-text-secondary" data-testid="pr-desc" />
+          <div className="mt-1 flex items-center gap-2 text-[12px] text-ac-text-muted">Reviewers: <Badge tone="outline">maya</Badge><Badge tone="outline">devang</Badge></div>
+          <Button variant="primary" size="md" className="mt-3 w-full" onClick={() => { setPrOpen(false); toast("Pull request opened", { description: prTitle }); }} data-testid="pr-create">Create pull request</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

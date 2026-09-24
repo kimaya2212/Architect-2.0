@@ -20,6 +20,9 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { MODELS } from "@/lib/mockData";
 
 const CHECKPOINTS = [
@@ -65,6 +68,9 @@ export default function ProjectWorkspace() {
   const [elementChip, setElementChip] = useState(null);
   const [checkpointsOpen, setCheckpointsOpen] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [publicLink, setPublicLink] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -132,7 +138,7 @@ export default function ProjectWorkspace() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="sm" onClick={() => toast("Share", { description: "Invite by email or turn on a public preview link." })} data-testid="workspace-share"><Share2 className="h-4 w-4" strokeWidth={1.5} /> Share</Button>
+          <Button variant="ghost" size="sm" onClick={() => setShareOpen(true)} data-testid="workspace-share"><Share2 className="h-4 w-4" strokeWidth={1.5} /> Share</Button>
           <button onClick={() => toast("GitHub", { description: "Each chat session works on its own branch: chat/session-1." })} className="hidden items-center gap-1.5 rounded-[6px] border border-ac-line px-2.5 py-1.5 text-[12px] text-ac-text-secondary hover:text-ac-text md:flex" data-testid="workspace-branch"><GitBranch className="h-3.5 w-3.5" strokeWidth={1.5} /> chat/session-1</button>
           <button onClick={() => setCheckpointsOpen(true)} className="rounded-[6px] p-1.5 text-ac-text-muted hover:bg-ac-elevated hover:text-ac-text" aria-label="Checkpoints" data-testid="workspace-checkpoints"><Clock className="h-4 w-4" strokeWidth={1.5} /></button>
           <Button variant="primary" size="sm" onClick={deploy} data-testid="workspace-deploy"><Rocket className="h-4 w-4" strokeWidth={1.5} /> {pro ? "Deploy" : "Publish"}</Button>
@@ -183,6 +189,27 @@ export default function ProjectWorkspace() {
       </SideDrawer>
 
       <DeployDrawer open={deployOpen} onClose={() => setDeployOpen(false)} project={project} pro={pro} onDeployed={() => { setProject((p) => ({ ...p, status: "live" })); api.patch(`/projects/${id}`, { status: "live" }).catch(() => {}); }} />
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="border-ac-line bg-ac-elevated" data-testid="share-dialog">
+          <DialogHeader><DialogTitle className="text-ac-text">Share {project.name}</DialogTitle><DialogDescription className="text-ac-text-muted">Invite teammates or turn on a public preview link.</DialogDescription></DialogHeader>
+          <div className="flex gap-2">
+            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="teammate@company.com" className="focus-ring h-10 flex-1 rounded-md border border-ac-line bg-ac-surface px-3 text-[14px] text-ac-text" data-testid="invite-email" />
+            <select className="h-10 rounded-md border border-ac-line bg-ac-surface px-2 text-[13px] text-ac-text-secondary" data-testid="invite-role"><option>Editor</option><option>Viewer</option><option>Owner</option></select>
+            <Button variant="primary" size="md" disabled={!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(inviteEmail)} onClick={() => { toast("Invite sent", { description: inviteEmail }); setInviteEmail(""); }} data-testid="send-invite">Invite</Button>
+          </div>
+          <div className="mt-2 space-y-1.5">
+            {[["Ada Tester", "Owner"], ["Maya", "Editor"], ["Devang", "Viewer"]].map(([n, r]) => (
+              <div key={n} className="flex items-center gap-2 rounded-[8px] border border-ac-line bg-ac-base p-2.5 text-[13px]"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-ac-elevated text-[11px] font-semibold text-ac-text">{n[0]}</span><span className="flex-1 text-ac-text">{n}</span><span className="text-ac-text-muted">{r}</span></div>
+            ))}
+          </div>
+          <div className="mt-2 flex items-center gap-3 rounded-[8px] border border-ac-line bg-ac-base p-3">
+            <div className="flex-1"><div className="text-[13px] font-medium text-ac-text">Public preview link</div><div className="text-[12px] text-ac-text-muted">Anyone with the link can view</div></div>
+            <button onClick={() => { setPublicLink((v) => !v); toast(publicLink ? "Public link off" : "Public link on"); }} className={cn("relative h-5 w-9 rounded-full transition-colors", publicLink ? "bg-ac-accent" : "bg-ac-line-strong")} data-testid="public-link-toggle"><span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", publicLink ? "left-4" : "left-0.5")} /></button>
+          </div>
+          {publicLink && <div className="flex items-center gap-2 rounded-[8px] border border-ac-line bg-ac-base p-2.5"><code className="flex-1 truncate font-mono text-[12px] text-ac-accent">https://architect.app/p/{project.id.slice(-8)}</code><Button variant="ghost" size="sm" onClick={() => { navigator.clipboard?.writeText(`https://architect.app/p/${project.id.slice(-8)}`); toast("Copied"); }}>Copy</Button></div>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

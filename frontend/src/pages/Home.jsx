@@ -92,11 +92,8 @@ export default function Home() {
   const entryAction = (key) => {
     if (key === "template") { navigate("/templates"); return; }
     if (key === "agent") { navigate("/agents"); return; }
-    const map = {
-      import: { t: "Import a project", d: "The 3-step import flow (GitHub, .zip, URL) opens in the next phase." },
-      agent: { t: "Build an agent", d: "The agent wizard (LangGraph, CrewAI and more) opens in the next phase." },
-    };
-    toast(map[key].t, { description: map[key].d });
+    if (key === "import") { navigate("/import"); return; }
+    toast("Coming up", { description: "This opens shortly." });
   };
 
   const filtered = useMemo(() => {

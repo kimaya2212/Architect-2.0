@@ -33,7 +33,7 @@ export function CommandPalette({ open, setOpen }) {
 
   const actions = useMemo(() => [
     { id: "new", label: "New project", hint: "Create", icon: Plus, run: () => navigate("/home") },
-    { id: "import", label: "Import from GitHub", hint: "Action", icon: Github, run: () => toast("Import from GitHub", { description: "Opens the 3-step import flow (coming in the next phase)." }) },
+    { id: "import", label: "Import from GitHub", hint: "Action", icon: Github, run: () => navigate("/import") },
     { id: "mode", label: "Toggle Pro mode", hint: "Action", icon: ToggleRight, run: toggleMode },
     { id: "deploy", label: "Deploy current project", hint: "Action", icon: Rocket, run: () => toast("Deploy", { description: "Open a project to run the deploy pre-flight." }) },
     { id: "nav-home", label: "Go to Home", hint: "Jump", icon: Home, run: () => navigate("/home") },
