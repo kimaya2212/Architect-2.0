@@ -1,0 +1,56 @@
+{
+  "summary": "Frontend-only testing (iteration_3) for Architect 2.0's two new flows: template auto-build and Deploy drawer. Both flows work end-to-end without any dead buttons or runtime crashes. Regression check confirms manual (non-template) projects still show the plan card and do NOT auto-build.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "flows_verified": {
+    "templates_auto_build": {
+      "navigate_with_autobuild_flag": true,
+      "no_plan_approval_shown": true,
+      "build_timeline_ran_automatically": true,
+      "preview_filled_section_by_section": true,
+      "status_chip_became_Live": "within ~11s"
+    },
+    "deploy_drawer": {
+      "opens_from_workspace_deploy": true,
+      "all_5_preflight_rows_render": ["preflight-build","preflight-env","preflight-db","preflight-agents","preflight-security"],
+      "deploy_confirm_disabled_before_checks": true,
+      "deploy_confirm_enabled_after_all_pass": true,
+      "targets_selectable": ["target-cloud","target-vercel","target-custom"],
+      "default_target": "cloud",
+      "env_toggle_works": ["env-preview","env-production"],
+      "default_env": "production",
+      "deploy_animation_runs": "Queued->Building->Optimizing->Live (~4.8s)",
+      "success_screen_url": "https://saas-dashboard.architect.app",
+      "qr_present": true,
+      "copy_open_share_add_domain_all_present_and_clickable": true,
+      "workspace_status_chip_flips_to_Live": true
+    },
+    "regression_manual_project": {
+      "auto_build_did_not_trigger": true,
+      "status_remained_Draft": true,
+      "plan_content_rendered": true,
+      "note": "PlanCard's approve button testid is 'approve-build' (not 'plan-approve'); body contains plan text and no build timeline started automatically, confirming autobuild is scoped to ?autobuild=1 URL."
+    }
+  },
+  "console_notes": [
+    "Non-blocking clipboard PAGEERROR when clicking deploy-copy in headless context: 'Failed to execute writeText on Clipboard: Write permission denied.' This is a headless-browser permission artifact only. Toast still fires and no UI crash occurs; safe to ignore in prod."
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DeployDrawer clipboard write can throw in restricted contexts (e.g., non-HTTPS or headless). Consider wrapping navigator.clipboard.writeText in try/catch to avoid an unhandled promise rejection surfacing in the console; UX is unaffected but the console noise is avoidable.",
+    "ProjectWorkspace.useEffect that strips ?autobuild reads searchParams via closure with an empty dep array — fine here (100ms cleanup) but flagged as a potential stale-closure pitfall if logic grows.",
+    "ChatPane autoBuild path posts a hard-coded assistant intro ('Starting your {name} build now…'). Fine for scripted UX, just note the fixed copy per RFC."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100%"},
+  "test_credentials": "Bearer test_session_seed_01 / user_id user_testseed01 (re-seeded via mongosh at start of this run).",
+  "seed_data_creation": "Re-seeded users/user_sessions for user_testseed01 with onboarding_completed=true. Created two test projects during flow: one via template (SaaS Dashboard) which reached Live, one manual regression project 'TEST_manual_regression' that remained Draft with plan.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Two mocked flows (template auto-build and Deploy drawer) confirmed working. Preflight animation takes ~2.6s; deploy timeline ~4.8s. Template build takes ~11s. If retesting deploy-copy, note clipboard API may fail in headless HTTPS-preview and log a PAGEERROR — this is not a real bug."
+}

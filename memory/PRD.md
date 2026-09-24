@@ -52,6 +52,11 @@ Build "Architect 2.0": a vibe-coding platform where users describe an app or AI 
 
 ## Phase 2 Status: COMPLETE
 
+## Implemented (2026-06 / Phase 3 — in progress)
+- **Deploy Drawer**: Publish/Deploy button opens a right drawer with an animated pre-flight checklist (Build/Env/Database/Agents/Security), target selector (Architect Cloud/Vercel/Custom), Preview/Production tabs, an animated deploy timeline (Queued→Building→Optimizing→Live), and a success screen with the live URL, decorative QR code, Copy/Open/Share, and Add-custom-domain. Flips project to Live.
+- **Templates → Workspace auto-build**: "Use template" creates the project and opens the workspace with `?autobuild=1`, skipping plan approval and auto-running the build so it feels instant.
+- testing_agent iteration_3: frontend 100% on both flows; regression confirms manual projects still require Approve & build.
+
 ## Backlog (next phases)
 ### P0 — Phase 2 (workspace)
 - Project workspace shell (top bar, resizable chat + tabbed canvas), Simple/Pro panel-reveal toggle.
