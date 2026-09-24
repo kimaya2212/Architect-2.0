@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ds/Button";
 import { Logo } from "@/components/brand/Logo";
 import { ChatPane } from "@/components/workspace/ChatPane";
 import { CanvasTabs } from "@/components/workspace/CanvasTabs";
+import { DeployDrawer } from "@/components/workspace/DeployDrawer";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
@@ -53,6 +54,8 @@ function SideDrawer({ open, onClose, title, icon: Icon, children, testId }) {
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoBuild = searchParams.get("autobuild") === "1";
   const { user, updatePrefs } = useAuth();
   const [project, setProject] = useState(null);
   const [mode, setMode] = useState("simple");
@@ -61,6 +64,7 @@ export default function ProjectWorkspace() {
   const [build, setBuild] = useState({ variant: "saas", building: false, status: "idle", progress: 0, revealed: 0 });
   const [elementChip, setElementChip] = useState(null);
   const [checkpointsOpen, setCheckpointsOpen] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -70,6 +74,10 @@ export default function ProjectWorkspace() {
       setMode(r.data.mode || user?.mode || "simple");
     }).catch(() => setNotFound(true));
   }, [id]); // eslint-disable-line
+
+  useEffect(() => {
+    if (autoBuild) { const t = setTimeout(() => setSearchParams({}, { replace: true }), 100); return () => clearTimeout(t); }
+  }, []); // eslint-disable-line
 
   const toggleMode = (m) => {
     setMode(m);
@@ -87,7 +95,7 @@ export default function ProjectWorkspace() {
 
   const onElementSelect = (label) => { setElementChip(label); toast("Element selected", { description: `Describe your change to the ${label.toLowerCase()} in chat.` }); };
 
-  const deploy = () => toast("Deploy pre-flight", { description: "Build passes · Env set · Agents healthy. One-click publish opens in the deploy phase." });
+  const deploy = () => setDeployOpen(true);
 
   if (notFound) return (
     <div className="flex h-screen flex-col items-center justify-center bg-ac-base">
@@ -135,7 +143,7 @@ export default function ProjectWorkspace() {
       <div className="min-h-0 flex-1">
         <PanelGroup direction="horizontal" autoSaveId="ac-workspace-panes">
           <Panel defaultSize={34} minSize={24} maxSize={55} className="min-w-0">
-            <ChatPane project={project} pro={pro} onBuildChange={setBuild} elementChip={elementChip} onClearChip={() => setElementChip(null)} onOpenDiff={() => toast(pro ? "Diff viewer" : "Changes", { description: "14 files changed · +820 −12" })} />
+            <ChatPane project={project} pro={pro} autoBuild={autoBuild} onBuildChange={setBuild} elementChip={elementChip} onClearChip={() => setElementChip(null)} onOpenDiff={() => toast(pro ? "Diff viewer" : "Changes", { description: "14 files changed · +820 −12" })} />
           </Panel>
           <PanelResizeHandle className="group relative w-px bg-ac-line data-[resize-handle-state=hover]:bg-ac-accent data-[resize-handle-state=drag]:bg-ac-accent">
             <div className="absolute inset-y-0 -left-1 -right-1" />
@@ -173,6 +181,8 @@ export default function ProjectWorkspace() {
           ))}
         </div>
       </SideDrawer>
+
+      <DeployDrawer open={deployOpen} onClose={() => setDeployOpen(false)} project={project} pro={pro} onDeployed={() => { setProject((p) => ({ ...p, status: "live" })); api.patch(`/projects/${id}`, { status: "live" }).catch(() => {}); }} />
     </div>
   );
 }

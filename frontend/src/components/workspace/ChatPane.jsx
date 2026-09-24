@@ -12,7 +12,7 @@ function scriptKeyFor(project) {
   return pickScript(project.prompt || project.description || "");
 }
 
-export function ChatPane({ project, pro, onBuildChange, elementChip, onClearChip, onOpenDiff }) {
+export function ChatPane({ project, pro, autoBuild, onBuildChange, elementChip, onClearChip, onOpenDiff }) {
   const script = useMemo(() => getScript(project.prompt || project.description || ""), [project]);
   const [messages, setMessages] = useState([]);        // {id, role, content, kind}
   const [status, setStatus] = useState("idle");        // idle | planning | building | done
@@ -56,6 +56,14 @@ export function ChatPane({ project, pro, onBuildChange, elementChip, onClearChip
       if (msgs.length === 0 && (project.prompt || "").trim()) {
         // seed conversation
         const u = await persist({ role: "user", content: project.prompt, kind: "text" });
+        if (autoBuild) {
+          const a = await persist({ role: "assistant", content: `Starting your ${project.name} build now — watch it come together in the preview.`, kind: "text" });
+          setMessages([u, a].map(local));
+          setReady(true);
+          const t = setTimeout(() => runBuild(), 500);
+          timers.current.push(t);
+          return;
+        }
         const a = await persist({ role: "assistant", content: script.intro, kind: "text" });
         await persist({ role: "assistant", content: "", kind: "plan", meta: { scriptKey: scriptKeyFor(project) } });
         setMessages([u, a].map(local));

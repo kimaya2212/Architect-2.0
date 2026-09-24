@@ -19,9 +19,9 @@ export default function Templates() {
   const use = async (t) => {
     setBusy(t.id);
     try {
-      await api.post("/projects", { name: `${t.name}`, description: t.desc, type: TYPE_MAP[t.tag] || "web", framework: "Auto", prompt: t.desc });
-      toast("Template added", { description: `"${t.name}" is now in your projects.` });
-      navigate("/projects");
+      const r = await api.post("/projects", { name: `${t.name}`, description: t.desc, type: TYPE_MAP[t.tag] || "web", framework: "Auto", prompt: `${t.name}. ${t.desc}` });
+      toast("Building from template", { description: `Opening ${t.name} in the workspace.` });
+      navigate(`/project/${r.data.id}?autobuild=1`);
     } finally { setBusy(null); }
   };
 
