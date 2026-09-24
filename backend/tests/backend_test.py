@@ -340,3 +340,126 @@ class TestLogout:
         assert r.status_code == 200
         r = s.get(f"{API}/auth/me")
         assert r.status_code == 401
+
+
+
+# ---------------- Data tab CRUD (Phase 2 addition) ----------------
+class TestDataRows:
+    @classmethod
+    def setup_class(cls):
+        # Re-seed user_testseed01 session if it was invalidated
+        import os as _os
+        from pymongo import MongoClient
+        from dotenv import load_dotenv
+        import datetime as _dt
+        load_dotenv("/app/backend/.env")
+        _c = MongoClient(_os.environ["MONGO_URL"])
+        _db = _c[_os.environ["DB_NAME"]]
+        _db.user_sessions.update_one(
+            {"session_token": TOKEN_1},
+            {"$set": {
+                "session_token": TOKEN_1,
+                "user_id": "user_testseed01",
+                "expires_at": (_dt.datetime.utcnow() + _dt.timedelta(days=7)).isoformat(),
+                "created_at": _dt.datetime.utcnow().isoformat(),
+            }},
+            upsert=True,
+        )
+
+    def test_auto_seed_4_demo_rows(self, s1):
+        # Create a fresh project to guarantee empty rows
+        r = s1.post(f"{API}/projects", json={"prompt": "data tab project"})
+        assert r.status_code == 200
+        pid = r.json()["id"]
+        pytest.data_pid = pid
+
+        r = s1.get(f"{API}/projects/{pid}/data/rows")
+        assert r.status_code == 200
+        rows = r.json()
+        assert len(rows) == 4
+        names = [x["name"] for x in rows]
+        assert names == ["Acme Inc", "Globex", "Initech", "Umbrella"]
+        for row in rows:
+            assert row["project_id"] == pid
+            assert row["user_id"] == "user_testseed01"
+            assert "id" in row and row["id"].startswith("row_")
+
+    def test_get_rows_idempotent(self, s1):
+        r = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows")
+        assert r.status_code == 200
+        assert len(r.json()) == 4  # not 8
+
+    def test_create_row_persists(self, s1):
+        r = s1.post(f"{API}/projects/{pytest.data_pid}/data/rows",
+                    json={"name": "TEST_Startup", "plan": "Pro", "mrr": "999", "status": "Active"})
+        assert r.status_code == 200
+        row = r.json()
+        assert row["name"] == "TEST_Startup"
+        pytest.new_row_id = row["id"]
+        # verify via GET
+        r = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows")
+        ids = [x["id"] for x in r.json()]
+        assert pytest.new_row_id in ids
+        assert len(r.json()) == 5
+
+    def test_patch_row_persists(self, s1):
+        r = s1.patch(f"{API}/projects/{pytest.data_pid}/data/rows/{pytest.new_row_id}",
+                     json={"plan": "Enterprise"})
+        assert r.status_code == 200
+        assert r.json()["plan"] == "Enterprise"
+        assert r.json()["name"] == "TEST_Startup"  # unchanged fields intact
+        # persistence via list
+        r = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows")
+        found = [x for x in r.json() if x["id"] == pytest.new_row_id][0]
+        assert found["plan"] == "Enterprise"
+
+    def test_delete_row_persists(self, s1):
+        r = s1.delete(f"{API}/projects/{pytest.data_pid}/data/rows/{pytest.new_row_id}")
+        assert r.status_code == 200
+        r = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows")
+        ids = [x["id"] for x in r.json()]
+        assert pytest.new_row_id not in ids
+        assert len(r.json()) == 4
+
+    def test_patch_missing_row_404(self, s1):
+        r = s1.patch(f"{API}/projects/{pytest.data_pid}/data/rows/row_nonexistent",
+                     json={"plan": "X"})
+        assert r.status_code == 404
+
+    def test_delete_missing_row_404(self, s1):
+        r = s1.delete(f"{API}/projects/{pytest.data_pid}/data/rows/row_nonexistent")
+        assert r.status_code == 404
+
+    def test_cross_user_list_404(self, s2):
+        r = s2.get(f"{API}/projects/{pytest.data_pid}/data/rows")
+        assert r.status_code == 404
+
+    def test_cross_user_create_404(self, s2):
+        r = s2.post(f"{API}/projects/{pytest.data_pid}/data/rows", json={"name": "hack"})
+        assert r.status_code == 404
+
+    def test_cross_user_patch_404(self, s1, s2):
+        # get an existing row belonging to user1
+        rows = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows").json()
+        rid = rows[0]["id"]
+        r = s2.patch(f"{API}/projects/{pytest.data_pid}/data/rows/{rid}", json={"plan": "hack"})
+        assert r.status_code == 404
+
+    def test_cross_user_delete_404(self, s1, s2):
+        rows = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows").json()
+        rid = rows[0]["id"]
+        r = s2.delete(f"{API}/projects/{pytest.data_pid}/data/rows/{rid}")
+        assert r.status_code == 404
+
+    def test_rows_scoped_to_project(self, s1):
+        # Create a second project; its rows should be independent 4 fresh seeds
+        r = s1.post(f"{API}/projects", json={"prompt": "second data project"})
+        pid2 = r.json()["id"]
+        r = s1.get(f"{API}/projects/{pid2}/data/rows")
+        assert r.status_code == 200
+        assert len(r.json()) == 4
+        # ids should differ from pid1
+        pid1_rows = s1.get(f"{API}/projects/{pytest.data_pid}/data/rows").json()
+        ids1 = set(x["id"] for x in pid1_rows)
+        ids2 = set(x["id"] for x in r.json())
+        assert ids1.isdisjoint(ids2)

@@ -38,6 +38,20 @@ Build "Architect 2.0": a vibe-coding platform where users describe an app or AI 
 ## Verification
 - testing_agent iteration_1: backend 100% (18/18 pytest), frontend 100%. Cookie auth confirmed. Fixed minor dialog a11y descriptions.
 
+## Implemented (2026-06 / Phase 2)
+- Project Workspace (`/project/:id`, full-screen): top bar (back, inline rename, status chip, centered Simple/Pro toggle, Share/GitHub branch/Checkpoints/Deploy), resizable chat + canvas panes (react-resizable-panels, persisted sizes).
+- Chat pane: persisted messages, editable Plan card (expand/toggle/add-item), streaming caret replies, Composer (attach, Build/Ask/Debug mode, model selector, slash commands, stop), suggested next-step chips, element-edit context chip.
+- Signature Live Build Timeline: scripted vertical stepper (pending→running→done) with elapsed time + expandable subtasks; right Preview fills in section-by-section (skeleton→real crossfade) with a progress bar; "Files changed" chip; success toast; project flips to Live. Reconstructs on reload.
+- Preview tab: route switcher, device toggle (desktop/tablet/mobile frame resize), Select element (crosshair → popover quick actions + chat chip), rendered MiniApp variants (SaaS dashboard/landing/support agent) with recharts.
+- Simple/Pro instant panel-reveal toggle: reveals Code/Terminal/Logs/Git tabs + Pro status bar with animation, no reload.
+- Pro tabs: Code (file tree + light-highlighted editor), Terminal (scripted commands + history), Logs (streaming + level filters + pause), Git (Simple friendly card / Pro branch+commits+diff).
+- **Data tab — REAL persisted CRUD** on a per-project `customers` demo table (auto-seed 4 rows; add/edit-cell/delete persist to MongoDB; verified across reload).
+- Checkpoints drawer (list + Restore with Undo toast). Scripted AI engine in `src/lib/aiEngine.js` (keyword-picked build scripts + trace scripts + mock files/logs).
+- Agents Studio: `/agents` list (auto-seeded 2 demo agents, success sparkline), 4-step New-agent wizard (POST persists), Agent detail with **Playground** (streaming answer + live step-by-step Trace: LLM/retrieval/tool/handoff with tokens/latency/cost + totals bar + Replay/Save-as-test), Blueprint node canvas (view-as-code), and Tools/Evals/Versions/Deploy&API/Monitoring tabs.
+- testing_agent iteration_2: backend 100% (38/38 pytest incl. Data CRUD), frontend 100% on workspace + build timeline + Simple/Pro toggle + agents playground + Data persistence.
+
+## Phase 2 Status: COMPLETE
+
 ## Backlog (next phases)
 ### P0 — Phase 2 (workspace)
 - Project workspace shell (top bar, resizable chat + tabbed canvas), Simple/Pro panel-reveal toggle.
