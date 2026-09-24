@@ -11,7 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 
 function timeAgo(iso) {
@@ -64,7 +64,9 @@ export function ProjectCard({ project, onChanged, view = "grid" }) {
     <>
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent className="border-ac-line bg-ac-elevated" data-testid="rename-dialog">
-          <DialogHeader><DialogTitle className="text-ac-text">Rename project</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-ac-text">Rename project</DialogTitle>
+            <DialogDescription className="text-ac-text-muted">Give this project a clear, memorable name.</DialogDescription>
+          </DialogHeader>
           <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doRename()} className="focus-ring h-10 w-full rounded-md border border-ac-line bg-ac-surface px-3 text-[14px] text-ac-text" data-testid="rename-input" />
           <DialogFooter>
             <Button variant="ghost" size="md" onClick={() => setRenameOpen(false)}>Cancel</Button>
@@ -75,7 +77,9 @@ export function ProjectCard({ project, onChanged, view = "grid" }) {
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="border-ac-line bg-ac-elevated" data-testid="delete-dialog">
-          <DialogHeader><DialogTitle className="text-ac-text">Delete this project?</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-ac-text">Delete this project?</DialogTitle>
+            <DialogDescription className="text-ac-text-muted">This permanently removes the project and can't be undone.</DialogDescription>
+          </DialogHeader>
           <p className="text-[14px] text-ac-text-muted">"{project.name}" will be permanently removed. This can't be undone.</p>
           <DialogFooter>
             <Button variant="ghost" size="md" onClick={() => setDeleteOpen(false)}>Keep it</Button>
