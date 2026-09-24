@@ -17,6 +17,7 @@ import { ChatPane } from "@/components/workspace/ChatPane";
 import { CanvasTabs } from "@/components/workspace/CanvasTabs";
 import { DeployDrawer } from "@/components/workspace/DeployDrawer";
 import { PageSkeleton } from "@/components/PageSkeleton";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";

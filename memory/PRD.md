@@ -57,6 +57,17 @@ Build "Architect 2.0": a vibe-coding platform where users describe an app or AI 
 - **Templates → Workspace auto-build**: "Use template" creates the project and opens the workspace with `?autobuild=1`, skipping plan approval and auto-running the build so it feels instant.
 - testing_agent iteration_3: frontend 100% on both flows; regression confirms manual projects still require Approve & build.
 
+## Implemented (2026-06 / Phase 3)
+- **Integrations hub** (`/integrations`): category-filtered catalog (Stripe, Resend, Supabase, OpenAI, Anthropic, Sheets, Slack, Twilio, Clerk), connect modal (API key + "where do I find this" + test connection), persisted connected state, and a **Secrets manager** table (masked reveal, scope, used-by, copy).
+- **Usage & Billing** (`/usage`): credits ring gauge, usage-by-project bars (from real projects), Free/Pro/Team plan comparison with current highlight + upgrade modal, invoices list.
+- **Import flow** (`/import`): 3-step stepper — Source (GitHub repo picker / zip / URL / other platforms) → animated Analysis with Stack Report + issues + Fix → Confirm (name/branch/mode) → creates a project and opens the workspace.
+- **GitHub PR flow**: Git tab (Pro) branch + commit history + side diff, and an Open-PR dialog (editable title, AI description, reviewers). Simple mode shows the friendly "saved to GitHub" card.
+- **Deployments + rollback**: Deploy drawer now lists recent deployments with Rollback (Undo), Promote-to-production, and per-deployment Logs, alongside the animated deploy + success URL/QR.
+- **Share & collaboration**: workspace Share dialog (invite by email with roles, member list, public preview link toggle with copyable link).
+- testing_agent iteration_4: frontend 100% (7/7 Phase-3 flows); fixed a missing `cn` import in ProjectWorkspace.
+
+## Phase 3 Status: core complete (remaining polish: comment-mode on preview, activity feed, full custom-domain DNS wizard, project-settings danger-zone type-to-confirm).
+
 ## Backlog (next phases)
 ### P0 — Phase 2 (workspace)
 - Project workspace shell (top bar, resizable chat + tabbed canvas), Simple/Pro panel-reveal toggle.

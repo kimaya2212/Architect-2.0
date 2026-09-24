@@ -1,0 +1,90 @@
+{
+  "summary": "Frontend-only testing (iteration_4) for Architect 2.0 Phase-3 flows: Integrations hub, Usage & Billing, 3-step Import, GitHub PR dialog, Deploy drawer deployments (rollback/promote/logs), workspace Share dialog, and navigation. All 7 flows work end-to-end after fixing one critical runtime bug in ProjectWorkspace.jsx (missing `cn` import).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "flows_verified": {
+    "integrations_hub": {
+      "category_chips_count": 8,
+      "connect_modal_opens": true,
+      "test_connection_works": true,
+      "save_connection_shows_connected": true,
+      "persistence_across_reload": "confirmed (localStorage) within same context",
+      "secrets_table_rows": 3,
+      "add_secret_toast": true
+    },
+    "usage_billing": {
+      "plan_Free_present": true,
+      "plan_Pro_present": true,
+      "plan_Team_present": true,
+      "upgrade_Team_opens_modal": true,
+      "confirm_upgrade_toast": true,
+      "autotopup_toast": true
+    },
+    "import_flow": {
+      "tabs": ["import-tab-github","import-tab-zip","import-tab-url","import-tab-other"],
+      "repo_selection_enables_analyze": true,
+      "analysis_rows": 5,
+      "stack_and_fix_text_present": true,
+      "continue_to_confirm": true,
+      "opens_project_after_import": "navigated to /project/proj_842fe362952745c3",
+      "creates_project_via_POST_api_projects": true
+    },
+    "github_pr": {
+      "pro_mode_required": true,
+      "git_tab_visible_in_pro": true,
+      "pr_dialog_open": true,
+      "pr_title_and_desc_editable": true,
+      "pr_create_success_toast": true,
+      "simple_mode_git_tab_still_present": "canvas-tab-git count=1 in simple too — renders friendly card variant"
+    },
+    "deploy_drawer_deployments": {
+      "drawer_opens": true,
+      "deployments_list_present": true,
+      "deployment_rows": 3,
+      "rollback_buttons": 1,
+      "promote_buttons": 1,
+      "logs_buttons": 3,
+      "rollback_toast_with_Undo_action": true,
+      "promote_toast": true,
+      "logs_toast": true
+    },
+    "share_dialog": {
+      "opens_from_workspace_share": true,
+      "send_invite_disabled_on_empty_email": true,
+      "send_invite_enabled_on_valid_email": true,
+      "invite_role_options_present": ["Editor","Viewer","Owner"],
+      "invite_sent_toast": true,
+      "public_link_toggle_reveals_copyable_link": "https://architect.app/p/952745c3"
+    },
+    "navigation": {
+      "home_entry_import_navigates_to_/import": true,
+      "sidebar_nav_ids": ["nav-home","nav-projects","nav-templates","nav-agents","nav-integrations","nav-usage---billing","nav-settings","nav-help","nav-docs"],
+      "nav_integrations_opens_/integrations": true,
+      "nav_usage_billing_opens_/usage": true,
+      "command_palette_import_navigates_to_/import": true
+    }
+  },
+  "test_report_links": [],
+  "action_items": [
+    "None — critical bug fixed in-place. Verify the one-liner import change (cn) is acceptable per style."
+  ],
+  "critical_code_review_comments": [
+    "ProjectWorkspace.jsx used `cn` at line 208 (public-link-toggle) without importing it — every workspace render threw `cn is not defined`, breaking the Share dialog toggle and the entire workspace. Fixed by adding `import { cn } from '@/lib/utils';` (already used the same helper across the app). This bug also broke the earlier /project navigation right after the import flow's `Open in Architect` step in my first pass, cascading into sidebar navigation failures.",
+    "Simple-mode Git tab visibility: `canvas-tab-git` renders in both simple and pro modes (count=1 in each). Requirement states simple mode should show the friendly 'saved to GitHub' card — verify CanvasTabs correctly switches the tab's inner content by mode; the tab button itself being present is acceptable.",
+    "Public preview URL uses the last 8 hex chars of the project id (e.g., /p/952745c3). Fine for a scripted mock; if this ever becomes real, collision risk is small but non-zero.",
+    "React key warning `Encountered two children with the same key` seen while a legacy project 'UI data tab test' is displayed. Pre-existing (also seen in iteration_3 context); not part of Phase-3 scope but worth flagging."
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/ProjectWorkspace.jsx (added missing `cn` import)"
+  ],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100% (7/7 Phase-3 flows) after cn-import fix"},
+  "test_credentials": "Bearer test_session_seed_01 / user_id user_testseed01 (re-seeded via mongosh at start).",
+  "seed_data_creation": "Re-seeded users/user_sessions for user_testseed01. Created one import-flow test project (proj_842fe362952745c3, name=TEST_import_flow) via the 3-step import UI; reused for share/git/deploy tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase-3 flows are all green after adding the missing `cn` import to ProjectWorkspace.jsx. Reuse project proj_842fe362952745c3 (TEST_import_flow) or create a fresh one via /import. To reach the git PR dialog, first switch to Pro via Settings > segment-pro. Integrations persistence uses localStorage — a new browser context resets it (expected). Public preview link format: https://architect.app/p/<last8ofprojectid>."
+}
