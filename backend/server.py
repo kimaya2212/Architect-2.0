@@ -471,6 +471,90 @@ async def get_agent(agent_id: str, user: User = Depends(get_current_user)):
     return Agent(**doc)
 
 
+# ----------------------------- Data tab (real CRUD on demo table) -----------------------------
+class DataRow(BaseModel):
+    id: str
+    project_id: str
+    user_id: str
+    name: str = ""
+    plan: str = "Free"
+    mrr: str = "0"
+    status: str = "Trial"
+    created_at: str
+
+
+class RowCreate(BaseModel):
+    name: str = "New customer"
+    plan: str = "Free"
+    mrr: str = "0"
+    status: str = "Trial"
+
+
+class RowUpdate(BaseModel):
+    name: Optional[str] = None
+    plan: Optional[str] = None
+    mrr: Optional[str] = None
+    status: Optional[str] = None
+
+
+DEMO_ROWS = [
+    {"name": "Acme Inc", "plan": "Pro", "mrr": "1200", "status": "Active"},
+    {"name": "Globex", "plan": "Team", "mrr": "3400", "status": "Active"},
+    {"name": "Initech", "plan": "Free", "mrr": "0", "status": "Trial"},
+    {"name": "Umbrella", "plan": "Pro", "mrr": "1200", "status": "Past due"},
+]
+
+
+async def _project_or_404(project_id: str, user_id: str):
+    proj = await db.projects.find_one({"id": project_id, "user_id": user_id}, {"_id": 0})
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return proj
+
+
+@api_router.get("/projects/{project_id}/data/rows", response_model=List[DataRow])
+async def list_rows(project_id: str, user: User = Depends(get_current_user)):
+    await _project_or_404(project_id, user.user_id)
+    docs = await db.data_rows.find({"project_id": project_id, "user_id": user.user_id}, {"_id": 0}).sort("created_at", 1).to_list(500)
+    if not docs:
+        created = []
+        base = datetime.now(timezone.utc)
+        for i, r in enumerate(DEMO_ROWS):
+            row = DataRow(id=new_id("row_"), project_id=project_id, user_id=user.user_id, created_at=(base + timedelta(seconds=i)).isoformat(), **r)
+            await db.data_rows.insert_one(row.model_dump())
+            created.append(row)
+        return created
+    return [DataRow(**d) for d in docs]
+
+
+@api_router.post("/projects/{project_id}/data/rows", response_model=DataRow)
+async def create_row(project_id: str, payload: RowCreate, user: User = Depends(get_current_user)):
+    await _project_or_404(project_id, user.user_id)
+    row = DataRow(id=new_id("row_"), project_id=project_id, user_id=user.user_id, created_at=now_iso(), **payload.model_dump())
+    await db.data_rows.insert_one(row.model_dump())
+    return row
+
+
+@api_router.patch("/projects/{project_id}/data/rows/{row_id}", response_model=DataRow)
+async def update_row(project_id: str, row_id: str, payload: RowUpdate, user: User = Depends(get_current_user)):
+    await _project_or_404(project_id, user.user_id)
+    update = {k: v for k, v in payload.model_dump().items() if v is not None}
+    res = await db.data_rows.update_one({"id": row_id, "project_id": project_id, "user_id": user.user_id}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Row not found")
+    fresh = await db.data_rows.find_one({"id": row_id}, {"_id": 0})
+    return DataRow(**fresh)
+
+
+@api_router.delete("/projects/{project_id}/data/rows/{row_id}")
+async def delete_row(project_id: str, row_id: str, user: User = Depends(get_current_user)):
+    await _project_or_404(project_id, user.user_id)
+    res = await db.data_rows.delete_one({"id": row_id, "project_id": project_id, "user_id": user.user_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Row not found")
+    return {"ok": True}
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Architect 2.0 API"}

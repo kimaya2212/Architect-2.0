@@ -52,7 +52,7 @@ export function CanvasTabs({ projectId, mode, build, onElementSelect }) {
       {/* content */}
       <div className="min-h-0 flex-1">
         {active === "preview" && <PreviewTab variant={build.variant} building={build.building} status={build.status} progress={build.progress} revealed={build.revealed} onElementSelect={onElementSelect} />}
-        {active === "data" && <DataTab pro={pro} />}
+        {active === "data" && <DataTab pro={pro} projectId={projectId} />}
         {active === "agents" && <WorkspaceAgentsTab />}
         {active === "code" && <CodeTab />}
         {active === "terminal" && <TerminalTab />}

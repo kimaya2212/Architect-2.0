@@ -211,6 +211,123 @@ class TestIsolation:
         assert r.status_code == 404
 
 
+# ---------------- Messages (Phase 2) ----------------
+class TestMessages:
+    def test_create_project_and_post_messages(self, s1):
+        r = s1.post(f"{API}/projects", json={"prompt": "Chat msg project"})
+        assert r.status_code == 200
+        pid = r.json()["id"]
+        pytest.msg_pid = pid
+        orig_edited = r.json()["last_edited"]
+
+        # list empty
+        r = s1.get(f"{API}/projects/{pid}/messages")
+        assert r.status_code == 200 and r.json() == []
+
+        # post text
+        r = s1.post(f"{API}/projects/{pid}/messages", json={"role": "user", "content": "hi", "kind": "text"})
+        assert r.status_code == 200
+        m1 = r.json()
+        assert m1["project_id"] == pid and m1["role"] == "user" and m1["kind"] == "text"
+
+        # post plan
+        r = s1.post(f"{API}/projects/{pid}/messages", json={"role": "assistant", "kind": "plan", "meta": {"sections": [{"title": "Auth"}]}})
+        assert r.status_code == 200
+        assert r.json()["kind"] == "plan"
+        assert r.json()["meta"]["sections"][0]["title"] == "Auth"
+
+        # post build
+        r = s1.post(f"{API}/projects/{pid}/messages", json={"role": "assistant", "kind": "build", "meta": {"steps": [{"id": "s1"}]}})
+        assert r.status_code == 200 and r.json()["kind"] == "build"
+
+        # list all 3, sorted by created_at asc
+        r = s1.get(f"{API}/projects/{pid}/messages")
+        assert r.status_code == 200
+        arr = r.json()
+        assert len(arr) == 3
+        kinds = [m["kind"] for m in arr]
+        assert kinds == ["text", "plan", "build"]
+
+        # project.last_edited updated
+        r = s1.get(f"{API}/projects/{pid}")
+        assert r.json()["last_edited"] >= orig_edited
+
+    def test_messages_cross_user_404(self, s1, s2):
+        r = s2.get(f"{API}/projects/{pytest.msg_pid}/messages")
+        assert r.status_code == 404
+        r = s2.post(f"{API}/projects/{pytest.msg_pid}/messages", json={"role": "user", "content": "hack"})
+        assert r.status_code == 404
+
+
+# ---------------- Project PATCH mode/status (Phase 2) ----------------
+class TestProjectPatchPhase2:
+    def test_patch_status_live_and_mode_pro(self, s1):
+        r = s1.post(f"{API}/projects", json={"prompt": "phase2 patch"})
+        pid = r.json()["id"]
+        r = s1.patch(f"{API}/projects/{pid}", json={"status": "live"})
+        assert r.status_code == 200 and r.json()["status"] == "live"
+        r = s1.patch(f"{API}/projects/{pid}", json={"mode": "pro"})
+        assert r.status_code == 200 and r.json()["mode"] == "pro"
+        r = s1.patch(f"{API}/projects/{pid}", json={"name": "PhasedTwo"})
+        assert r.status_code == 200 and r.json()["name"] == "PhasedTwo"
+        # persistence
+        r = s1.get(f"{API}/projects/{pid}")
+        d = r.json()
+        assert d["status"] == "live" and d["mode"] == "pro" and d["name"] == "PhasedTwo"
+
+
+# ---------------- Agents (Phase 2) ----------------
+class TestAgents:
+    @classmethod
+    def setup_class(cls):
+        # Clean agents for both users to trigger fresh auto-seed on s1
+        import os as _os
+        from pymongo import MongoClient
+        from dotenv import load_dotenv
+        load_dotenv("/app/backend/.env")
+        _c = MongoClient(_os.environ["MONGO_URL"])
+        _db = _c[_os.environ["DB_NAME"]]
+        _db.agents.delete_many({"user_id": {"$in": ["user_testseed01", "user_testseed02"]}})
+
+    def test_get_agents_auto_seeds(self, s1):
+        r = s1.get(f"{API}/agents")
+        assert r.status_code == 200
+        arr = r.json()
+        assert len(arr) == 2
+        names = sorted([a["name"] for a in arr])
+        assert names == ["Helpdesk Copilot", "Research Scout"]
+        for a in arr:
+            assert a["user_id"] == "user_testseed01"
+            assert a["is_sample"] is True
+
+    def test_get_agents_second_call_no_reseed(self, s1):
+        r = s1.get(f"{API}/agents")
+        assert r.status_code == 200
+        assert len(r.json()) == 2  # not 4
+
+    def test_create_agent_draft(self, s1):
+        r = s1.post(f"{API}/agents", json={
+            "name": "TEST_MyAgent", "goal": "do things", "framework": "LangGraph",
+            "model": "Claude Sonnet 4.6", "tools": ["Web search"], "system_prompt": "hi"
+        })
+        assert r.status_code == 200
+        a = r.json()
+        assert a["status"] == "draft"
+        assert a["user_id"] == "user_testseed01"
+        assert a["name"] == "TEST_MyAgent"
+        assert a["tools"] == ["Web search"]
+        pytest.agent_id = a["id"]
+
+    def test_get_agent_by_id(self, s1):
+        r = s1.get(f"{API}/agents/{pytest.agent_id}")
+        assert r.status_code == 200
+        assert r.json()["id"] == pytest.agent_id
+
+    def test_agent_cross_user_404(self, s2):
+        r = s2.get(f"{API}/agents/{pytest.agent_id}")
+        assert r.status_code == 404
+
+
 # ---------------- Logout ----------------
 class TestLogout:
     def test_logout_invalidates_session(self):
